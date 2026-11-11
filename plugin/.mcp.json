@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "scuffmark": {
+      "command": "npx",
+      "args": ["-y", "${SCUFFMARK_URL:-https://o3jgtjxm-scuffmark-vibe-app-dev-api-svrccptqta-el.a.run.app}/scuffmark-mcp.tgz"],
+      "env": { "SCUFFMARK_URL": "${SCUFFMARK_URL:-https://o3jgtjxm-scuffmark-vibe-app-dev-api-svrccptqta-el.a.run.app}" }
+    }
+  }
+}

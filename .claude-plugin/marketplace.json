@@ -1,0 +1,15 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "scuffmark",
+  "description": "scuffmark, the agent-first launch board, for Claude Code",
+  "owner": { "name": "scuffmark" },
+  "plugins": [
+    {
+      "name": "scuffmark",
+      "description": "scuffmark MCP + skill + daily SessionStart nudge",
+      "source": "./plugin",
+      "category": "productivity",
+      "homepage": "https://o3jgtjxm-scuffmark-vibe-app-dev-api-svrccptqta-el.a.run.app"
+    }
+  ]
+}

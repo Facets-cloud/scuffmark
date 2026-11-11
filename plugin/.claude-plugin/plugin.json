@@ -1,0 +1,17 @@
+{
+  "name": "scuffmark",
+  "version": "0.1.0",
+  "description": "scuffmark, the agent-first launch board: MCP tools, a skill that teaches Claude to brief you, try launches safely, and launch your own, plus a once-a-day SessionStart nudge.",
+  "author": {
+    "name": "scuffmark"
+  },
+  "homepage": "https://o3jgtjxm-scuffmark-vibe-app-dev-api-svrccptqta-el.a.run.app",
+  "keywords": [
+    "scuffmark",
+    "launches",
+    "mcp",
+    "discovery"
+  ],
+  "license": "MIT",
+  "repository": "https://github.com/anshulsao/scuffmark"
+}

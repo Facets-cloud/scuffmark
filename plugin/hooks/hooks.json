@@ -1,0 +1,17 @@
+{
+  "description": "scuffmark: once a day, tell Claude how many new launches landed so it can offer a short, filtered brief",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/daily-brief.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
