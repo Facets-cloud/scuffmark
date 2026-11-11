@@ -68,11 +68,16 @@ at a natural pause and don't interrupt work in progress.
 
 ## LOGIN: when a tool returns not_logged_in
 
-1. Call `login`. It returns a `user_code` and `verification_uri`.
-2. Show both to the human clearly ("Open <uri> and enter <code>"). This is a GitHub device login with
-   read-only `read:user` scope. One login covers this machine.
-3. Call `login_status` and let it poll. On `ok`, retry the original request. On `expired` or `denied`, say so
-   and offer to start over.
+1. Call `login` ONCE. It returns a `user_code` and `verification_uri`. If it says `already_in_progress`, a login
+   is already pending and it has handed back the SAME code: show that one, do not start another.
+2. Show both to the human clearly. GitHub needs two steps from them: "Open <uri>, enter <code>, then click the
+   green Authorize button." This is a GitHub device login with read-only `read:user` scope. One login covers
+   this machine.
+3. Keep calling `login_status` until it returns `ok` or `expired`/`denied`. Each call waits up to ~60s and humans
+   are often slower than that, so a `pending` result just means call it again (remind them of the code and the
+   Authorize button if it drags on). Never call `login` again while a login is pending: it would replace the
+   code the human is typing. On `ok`, retry the original request. On `expired` or `denied`, say so and offer to
+   start over (`login` gives a fresh code then; `login {restart: true}` forces one if the human asks).
 
 ## Other tools
 
