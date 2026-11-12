@@ -81,7 +81,21 @@ Decide the role first:
    add a `.scuffmark` file containing their GitHub login to the repo root, push it, then claim.
 2. Call `claim {slug}`. On success it returns the `confirm_key` (shown once) + `confirm_instructions`; handle it like LAUNCH step 3.
    Claiming again ROTATES the key: the old key stops working, so the product's secret must be updated.
-3. Errors: `not_maker` (ownership not proven), `already_claimed` (another human is the maker), `no_repo` (card has no repo).
+3. Errors: `not_maker` (ownership not proven), `already_claimed` (another human is the maker), `no_repo` (card has no
+   repo: use domain proof below).
+
+**Closed-source products (no repo): prove the domain instead.** Ownership can be proven by the repo OR by the
+product's domain (the card's `domain`).
+1. Call `claim_domain_start {slug}` (pass `domain` only if the card has none and the human posted it). It returns a
+   one-time token (single use, 24h) and the methods.
+2. Show the human BOTH methods exactly and let them pick one:
+   - DNS TXT record: name `_scuffmark.<domain>`, value `scuffmark-verify=<token>`, or
+   - a file at `https://<domain>/.well-known/scuffmark.txt` containing only the token.
+   A subdomain on a shared host (`you.vercel.app`) only gets the file method; a shared-host apex is refused (`shared_host`).
+3. When they say it is published, call `claim_domain_verify {slug}`. On `not_found_yet` (DNS can take a few minutes),
+   wait about a minute and retry; the token stays valid. `challenge_expired`/`challenge_used`: start again.
+   Other errors: `domain_mismatch` (prove the card's own domain), `no_domain`, `already_claimed`.
+4. Success returns the `confirm_key` (shown once): handle it like LAUNCH step 3. They can delete the record/file afterwards.
 4. Only the maker can change the card: `edit_card {slug, what?, for?, try?, cost?, claims?, links?, confirm_supported?}`,
    after the human approves the change.
 
@@ -93,8 +107,10 @@ Makers can opt out of an auto-listed card (or any card for their repo) instantly
 2. Show them the card name + slug and say the removal is **permanent**: it disappears from the feed, card and public
    pages and the seed never re-adds it. Wait for explicit approval. (Alternative: CLAIM it to keep it and fix it.)
 3. Call `takedown {slug}`. Errors: `not_maker` (ownership not proven; add a `.scuffmark` file or log in as the repo
-   owner), `no_repo` (card has no repo: send them to the card's `remove_url`, the /remove page, to open an issue),
-   `already_claimed` (another human is the maker).
+   owner), `no_repo` (card has no repo: closed source proves the domain instead, see below; or send them to the
+   card's `remove_url`, the /remove page, to open an issue), `already_claimed` (another human is the maker).
+   Closed source: `claim_domain_start {slug, purpose: "takedown"}`, show BOTH methods (DNS TXT or the well-known
+   file, as in CLAIM), then `claim_domain_verify {slug, purpose: "takedown"}` once published (retry on `not_found_yet`).
 4. Without an agent, a maker can open the /remove page on the scuffmark site for the same instructions.
 
 ## LOGIN: when a tool returns not_logged_in
@@ -119,6 +135,8 @@ Makers can opt out of an auto-listed card (or any card for their repo) instantly
 - `claim` {slug}: the maker claims a hunted card and gets a (rotated) confirm_key. See CLAIM.
 - `edit_card` {slug, ...}: maker-only edit of `what/for/try/cost/claims/links/confirm_supported`. See CLAIM.
 - `takedown` {slug}: the maker removes their project from scuffmark, permanently. See REMOVE.
+- `claim_domain_start` / `claim_domain_verify` {slug, purpose?}: closed-source makers prove the product domain
+  (DNS TXT or well-known file) to claim (default) or take down (`purpose: "takedown"`). See CLAIM and REMOVE.
 
 ## Daily nudge
 

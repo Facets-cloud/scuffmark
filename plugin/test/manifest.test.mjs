@@ -4,8 +4,8 @@ import { readFileSync, existsSync } from 'node:fs';
 
 const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 
-test('plugin is version 0.1.9', () => {
-  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.9');
+test('plugin is version 0.1.10', () => {
+  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.10');
 });
 
 const SITE = 'https://scuffmark.facets.cloud';
@@ -40,8 +40,8 @@ test('repo refs point at Facets-cloud/scuffmark (no anshulsao/scuffmark left)', 
 test('.mcp.json pins the versioned MCP tarball (npx caches by URL)', () => {
   const args = JSON.parse(read('.mcp.json')).mcpServers.scuffmark.args;
   const url = args.find((a) => a.includes('.tgz'));
-  assert.match(url, /\/scuffmark-mcp-0\.1\.7\.tgz$/);
-  assert.equal(url, '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.7.tgz');
+  assert.match(url, /\/scuffmark-mcp-0\.1\.8\.tgz$/);
+  assert.equal(url, '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.8.tgz');
   assert.deepEqual(JSON.parse(read('.mcp.json')).mcpServers.scuffmark.env, { SCUFFMARK_URL: '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}' });
 });
 
@@ -93,7 +93,7 @@ test('SKILL.md lists claim + edit_card in Other tools and triggers on hunt/claim
 
 test('codex manifest ships the thumbprint icon + logo that exist on disk', () => {
   const m = JSON.parse(read('.codex-plugin/plugin.json'));
-  assert.equal(m.version, '0.1.9');
+  assert.equal(m.version, '0.1.10');
   assert.equal(m.interface.composerIcon, './assets/icon.svg');
   assert.equal(m.interface.logo, './assets/logo.svg');
   for (const f of ['assets/icon.svg', 'assets/logo.svg']) {
@@ -140,4 +140,28 @@ test('no implied affiliation in skill or README', () => {
     const t = read(f);
     for (const re of [/\bpartner/i, /\bofficial/i, /featured (by|on)/i, /\bendorsed/i]) assert.doesNotMatch(t, re, f);
   }
+});
+
+
+// ---- closed-source makers: domain proof (plugin 0.1.10 / mcp 0.1.8) ----
+test('SKILL.md CLAIM: repo proof OR domain proof (claim_domain_start -> human picks DNS TXT or well-known -> claim_domain_verify)', () => {
+  const s = read('skills/scuffmark/SKILL.md');
+  const c = section(s, '## CLAIM', '## REMOVE');
+  assert.match(c, /closed-source|no repo/i);
+  assert.match(c, /`claim_domain_start \{slug/);
+  assert.match(c, /`claim_domain_verify \{slug/);
+  assert.match(c, /_scuffmark\./);
+  assert.match(c, /\.well-known\/scuffmark\.txt/);
+  assert.match(c, /BOTH/);
+  assert.match(c, /not_found_yet/);
+  assert.match(c, /retry/i);
+  assert.match(c, /shared_host/);
+});
+
+test('SKILL.md REMOVE: closed source can take down via domain proof (purpose takedown)', () => {
+  const s = read('skills/scuffmark/SKILL.md');
+  const r = section(s, '## REMOVE', '## LOGIN');
+  assert.match(r, /claim_domain_start \{slug, purpose: "takedown"\}/);
+  assert.match(r, /claim_domain_verify \{slug, purpose: "takedown"\}/);
+  assert.match(section(s, '## Other tools', '## Daily nudge'), /`claim_domain_start`/);
 });
