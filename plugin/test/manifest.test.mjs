@@ -4,8 +4,8 @@ import { readFileSync, existsSync } from 'node:fs';
 
 const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 
-test('plugin is version 0.1.5', () => {
-  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.5');
+test('plugin is version 0.1.6', () => {
+  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.6');
 });
 
 const SITE = 'https://scuffmark.facets.cloud';
@@ -88,4 +88,16 @@ test('SKILL.md lists claim + edit_card in Other tools and triggers on hunt/claim
   assert.match(desc, /claim/);
   assert.match(desc, /hunt/i);
   assert.match(desc, /edit_card/);
+});
+
+test('codex manifest ships the thumbprint icon + logo that exist on disk', () => {
+  const m = JSON.parse(read('.codex-plugin/plugin.json'));
+  assert.equal(m.version, '0.1.6');
+  assert.equal(m.interface.composerIcon, './assets/icon.svg');
+  assert.equal(m.interface.logo, './assets/logo.svg');
+  for (const f of ['assets/icon.svg', 'assets/logo.svg']) {
+    const svg = read(f);
+    assert.match(svg, /^<svg/);
+    assert.doesNotMatch(svg, /<script/i);
+  }
 });
