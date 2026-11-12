@@ -4,8 +4,8 @@ import { readFileSync, existsSync } from 'node:fs';
 
 const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 
-test('plugin is version 0.1.10', () => {
-  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.10');
+test('plugin is version 0.1.11', () => {
+  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.11');
 });
 
 const SITE = 'https://scuffmark.facets.cloud';
@@ -40,8 +40,8 @@ test('repo refs point at Facets-cloud/scuffmark (no anshulsao/scuffmark left)', 
 test('.mcp.json pins the versioned MCP tarball (npx caches by URL)', () => {
   const args = JSON.parse(read('.mcp.json')).mcpServers.scuffmark.args;
   const url = args.find((a) => a.includes('.tgz'));
-  assert.match(url, /\/scuffmark-mcp-0\.1\.8\.tgz$/);
-  assert.equal(url, '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.8.tgz');
+  assert.match(url, /\/scuffmark-mcp-0\.1\.9\.tgz$/);
+  assert.equal(url, '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.9.tgz');
   assert.deepEqual(JSON.parse(read('.mcp.json')).mcpServers.scuffmark.env, { SCUFFMARK_URL: '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}' });
 });
 
@@ -93,7 +93,7 @@ test('SKILL.md lists claim + edit_card in Other tools and triggers on hunt/claim
 
 test('codex manifest ships the thumbprint icon + logo that exist on disk', () => {
   const m = JSON.parse(read('.codex-plugin/plugin.json'));
-  assert.equal(m.version, '0.1.10');
+  assert.equal(m.version, '0.1.11');
   assert.equal(m.interface.composerIcon, './assets/icon.svg');
   assert.equal(m.interface.logo, './assets/logo.svg');
   for (const f of ['assets/icon.svg', 'assets/logo.svg']) {
@@ -164,4 +164,26 @@ test('SKILL.md REMOVE: closed source can take down via domain proof (purpose tak
   assert.match(r, /claim_domain_start \{slug, purpose: "takedown"\}/);
   assert.match(r, /claim_domain_verify \{slug, purpose: "takedown"\}/);
   assert.match(section(s, '## Other tools', '## Daily nudge'), /`claim_domain_start`/);
+});
+
+// ---- README badge + admin stats + headless nudge (plugin 0.1.11 / mcp 0.1.9) ----
+test('SKILL.md LAUNCH and CLAIM: show the human badge_markdown and offer to add it to the README (only on yes)', () => {
+  const s = read('skills/scuffmark/SKILL.md');
+  for (const [a, b] of [['## LAUNCH', '## CLAIM'], ['## CLAIM', '## REMOVE']]) {
+    const c = section(s, a, b);
+    assert.match(c, /badge_markdown/, a);
+    assert.match(c, /README/, a);
+  }
+  assert.match(section(s, '## LAUNCH', '## CLAIM'), /working for N/);
+});
+
+test('SKILL.md Other tools: admin_stats is operator-only', () => {
+  const o = section(read('skills/scuffmark/SKILL.md'), '## Other tools', '## Daily nudge');
+  assert.match(o, /`admin_stats`/);
+  assert.match(o, /not_admin/);
+});
+
+test('SKILL.md Daily nudge: headless sessions never spend the daily slot', () => {
+  const d = read('skills/scuffmark/SKILL.md').split('## Daily nudge')[1];
+  assert.match(d, /headless|non-interactive/i);
 });

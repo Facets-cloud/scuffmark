@@ -237,3 +237,89 @@ test('hook source has no write to agent.json', () => {
     }
   }
 });
+
+// --- Non-interactive sessions must not spend the daily slot (nudge fix B) ---
+// A headless session (flow --auto child, launchd playbook, `claude -p`, SDK) has no human to brief.
+// It must exit silently, make no request, and NOT stamp last-brief, so the human's session gets the nudge.
+const HEADLESS = [
+  ['flow auto run (FLOW_AUTO_RUN)', { FLOW_AUTO_RUN: 'some-task' }],
+  ['flow background terminal (FLOW_TERM=bg)', { FLOW_TERM: 'bg' }],
+  ['unattended Claude Code session (CLAUDE_CODE_SESSION_ATTENDED=0)', { CLAUDE_CODE_SESSION_ATTENDED: '0' }],
+  ['claude -p / SDK (CLAUDE_CODE_ENTRYPOINT=sdk-cli)', { CLAUDE_CODE_ENTRYPOINT: 'sdk-cli' }],
+  ['Agent SDK TS (CLAUDE_CODE_ENTRYPOINT=sdk-ts)', { CLAUDE_CODE_ENTRYPOINT: 'sdk-ts' }],
+  ['Agent SDK Py (CLAUDE_CODE_ENTRYPOINT=sdk-py)', { CLAUDE_CODE_ENTRYPOINT: 'sdk-py' }],
+  ['SCUFFMARK_HEADLESS=1 escape hatch', { SCUFFMARK_HEADLESS: '1' }],
+];
+for (const [name, extra] of HEADLESS) {
+  test(`headless: ${name} -> silent, no request, no stamp`, async () => {
+    let hits = 0;
+    const { srv, url } = await fakeServer((req, res) => { hits++; res.end(JSON.stringify({ cards: CARDS })); });
+    const home = tmpHome();
+    loginHome(home, url);
+    const r = await run({ SCUFFMARK_HOME: home, SCUFFMARK_URL: url, ...extra });
+    srv.close();
+    assert.equal(r.code, 0);
+    assert.equal(r.out, '');
+    assert.equal(hits, 0);
+    assert.equal(fs.existsSync(path.join(home, 'last-brief')), false);
+  });
+}
+
+test('headless via hook input JSON (non_interactive:true) -> silent, no stamp', async () => {
+  let hits = 0;
+  const { srv, url } = await fakeServer((req, res) => { hits++; res.end(JSON.stringify({ cards: CARDS })); });
+  const home = tmpHome();
+  loginHome(home, url);
+  const r = await run({ SCUFFMARK_HOME: home, SCUFFMARK_URL: url },
+    { stdin: '{"hook_event_name":"SessionStart","source":"startup","non_interactive":true}' });
+  srv.close();
+  assert.equal(r.out, '');
+  assert.equal(hits, 0);
+  assert.equal(fs.existsSync(path.join(home, 'last-brief')), false);
+});
+
+test('interactive markers (CLAUDE_CODE_ENTRYPOINT=cli, ATTENDED=1, FLOW_TERM=tab) -> nudge + stamp', async () => {
+  const { srv, url } = await fakeServer((req, res) => { res.end(JSON.stringify({ cards: CARDS })); });
+  const home = tmpHome();
+  loginHome(home, url);
+  const r = await run({ SCUFFMARK_HOME: home, SCUFFMARK_URL: url,
+    CLAUDE_CODE_ENTRYPOINT: 'cli', CLAUDE_CODE_SESSION_ATTENDED: '1', FLOW_TERM: 'tab' });
+  srv.close();
+  assert.match(JSON.parse(r.out).hookSpecificOutput.additionalContext, /4 new launches/);
+  assert.ok(fs.existsSync(path.join(home, 'last-brief')));
+});
+
+test('headless session leaves an existing stamp untouched, and the next human session still gets the nudge', async () => {
+  const home = tmpHome();
+  const yesterday = new Date(Date.now() - 86400e3).toISOString();
+  fs.writeFileSync(path.join(home, 'last-brief'), yesterday);
+  const { srv, url } = await fakeServer((req, res) => { res.end(JSON.stringify({ cards: CARDS })); });
+  loginHome(home, url);
+  const bg = await run({ SCUFFMARK_HOME: home, SCUFFMARK_URL: url, FLOW_AUTO_RUN: 'x' });
+  const afterBg = fs.readFileSync(path.join(home, 'last-brief'), 'utf8');
+  const human = await run({ SCUFFMARK_HOME: home, SCUFFMARK_URL: url });
+  srv.close();
+  assert.equal(bg.out, '');
+  assert.equal(afterBg, yesterday);
+  assert.match(JSON.parse(human.out).hookSpecificOutput.additionalContext, /4 new launches/);
+});
+
+test('malformed feed body (200 but not JSON) -> silent, no stamp (retry next session)', async () => {
+  const home = tmpHome();
+  const { srv, url } = await fakeServer((req, res) => { res.end('<html>front door</html>'); });
+  loginHome(home, url);
+  const r = await run({ SCUFFMARK_HOME: home, SCUFFMARK_URL: url });
+  srv.close();
+  assert.equal(r.out, '');
+  assert.equal(fs.existsSync(path.join(home, 'last-brief')), false);
+});
+
+test('200 without a cards array -> silent, no stamp', async () => {
+  const home = tmpHome();
+  const { srv, url } = await fakeServer((req, res) => { res.end('{"error":"x"}'); });
+  loginHome(home, url);
+  const r = await run({ SCUFFMARK_HOME: home, SCUFFMARK_URL: url });
+  srv.close();
+  assert.equal(r.out, '');
+  assert.equal(fs.existsSync(path.join(home, 'last-brief')), false);
+});

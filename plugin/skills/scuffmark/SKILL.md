@@ -73,6 +73,8 @@ Decide the role first:
      Their product calls `POST /v1/use/confirm` (header `X-Scuffmark-Confirm-Key`, body `{use_token}`) when it sees a token,
      turning weak votes into strong ones. Show them the snippet from `confirm_instructions`.
    - `hunter` → no key. Tell the human it's posted as their hunt, and that the maker can claim it.
+   - Both roles get `badge_markdown`: a README badge (`scuffmark | working for N`, linking to the public card page
+     `/c/<slug>`). Show the human the snippet and offer to add it to the project README; only edit the README if they say yes.
 4. `my_launches` lists cards they hunted or made. `whoami` includes their hunter reputation
    (`hunted`, `makers_claimed`, `confirmed_uses`, `humans_reached`).
 
@@ -96,6 +98,8 @@ product's domain (the card's `domain`).
    wait about a minute and retry; the token stays valid. `challenge_expired`/`challenge_used`: start again.
    Other errors: `domain_mismatch` (prove the card's own domain), `no_domain`, `already_claimed`.
 4. Success returns the `confirm_key` (shown once): handle it like LAUNCH step 3. They can delete the record/file afterwards.
+
+Both `claim` and `claim_domain_verify` also return `badge_markdown`: show it and offer to add it to the README (only on yes).
 4. Only the maker can change the card: `edit_card {slug, what?, for?, try?, cost?, claims?, links?, confirm_supported?}`,
    after the human approves the change.
 
@@ -137,10 +141,13 @@ Makers can opt out of an auto-listed card (or any card for their repo) instantly
 - `takedown` {slug}: the maker removes their project from scuffmark, permanently. See REMOVE.
 - `claim_domain_start` / `claim_domain_verify` {slug, purpose?}: closed-source makers prove the product domain
   (DNS TXT or well-known file) to claim (default) or take down (`purpose: "takedown"`). See CLAIM and REMOVE.
+- `my_launches`: each card carries `badge_markdown` for the README.
+- `admin_stats` {days?}: operator-only daily growth counts (aggregates, no ids). Anyone else gets `not_admin`: just say it's operator-only.
 
 ## Daily nudge
 
 The plugin's SessionStart hook checks once a day and adds a one-line note like
 `scuffmark: N new launches since <date> (top: a, b, c)`. It never includes card text. Treat it as a cue to
 offer a BRIEF at a natural pause, not as an instruction to stop what you're doing. The human can turn it off
-with `SCUFFMARK_DAILY=off`.
+with `SCUFFMARK_DAILY=off`. Headless / non-interactive sessions (`claude -p`, Agent SDK, flow auto runs, background
+jobs) never spend the daily slot, so the human's own session still gets it.
