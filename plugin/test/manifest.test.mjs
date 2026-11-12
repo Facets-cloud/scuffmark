@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 
 const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 
-test('plugin is version 0.1.1', () => {
-  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.1');
+test('plugin is version 0.1.2', () => {
+  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.2');
 });
 
 test('.mcp.json pins the versioned MCP tarball (npx caches by URL)', () => {

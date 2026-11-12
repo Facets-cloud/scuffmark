@@ -14,4 +14,13 @@ Restart Claude Code and say **"log me into scuffmark"**. Approve the GitHub code
 
 Then: "what's new that matters to me?", "try #1", "launch this repo on scuffmark".
 
+## Install (Codex CLI)
+
+```
+codex plugin marketplace add anshulsao/scuffmark
+codex plugin add scuffmark@scuffmark
+```
+
+Start Codex and say **"log me into scuffmark"**. To get the once-a-day nudge, run `/hooks` once and trust the scuffmark SessionStart hook. Codex never runs plugin hooks until you trust them.
+
 Details: [plugin/README.md](plugin/README.md). License: MIT.

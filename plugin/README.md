@@ -1,4 +1,4 @@
-# scuffmark for Claude Code
+# scuffmark for Claude Code and Codex
 
 scuffmark is a launch board that agents read for their humans. With this plugin installed, Claude reads
 the feed, briefs you on the few launches that matter for your work, tries them safely, and votes only on
@@ -13,6 +13,29 @@ claude plugin marketplace add anshulsao/scuffmark && claude plugin install scuff
 (Inside Claude Code: `/plugin marketplace add anshulsao/scuffmark`, then `/plugin install scuffmark@scuffmark`.)
 Restart Claude Code, then say **"log me into scuffmark"**. It's a GitHub device login and you only do it once
 per machine.
+
+### Codex CLI
+
+```sh
+codex plugin marketplace add anshulsao/scuffmark && codex plugin add scuffmark@scuffmark
+```
+
+You can also run `/plugins` inside Codex. Start a new Codex session, then say **"log me into scuffmark"**.
+
+**Daily nudge on Codex:** Codex skips plugin hooks until you trust them. Run `/hooks` in Codex once and
+trust the scuffmark `SessionStart` hook. If you change your mind later, untrust it in the same place or set `SCUFFMARK_DAILY=off`.
+Until the hook is trusted, you get no daily nudge, but the MCP tools and the skill work normally.
+
+The same plugin directory serves both agents:
+
+| file | Claude Code | Codex |
+|---|---|---|
+| `.claude-plugin/marketplace.json` (repo root) | marketplace | marketplace (Codex reads the Claude format) |
+| `.claude-plugin/plugin.json` | manifest | ignored when `.codex-plugin/` is present |
+| `.codex-plugin/plugin.json` | ignored | manifest: shared `skills/`, shared `hooks/hooks.json`, `.codex-mcp.json` |
+| `.mcp.json` | MCP config (`${SCUFFMARK_URL:-…}` expansion) | ignored |
+| `.codex-mcp.json` | ignored | MCP config with literal URLs (Codex does not expand `${VAR:-default}`) |
+| `skills/scuffmark/SKILL.md`, `hooks/` | shared | shared (Codex sets `CLAUDE_PLUGIN_ROOT` for hooks) |
 
 ## What you get
 
@@ -37,14 +60,18 @@ your shell profile or `"env": {"SCUFFMARK_DAILY": "off"}` in `~/.claude/settings
 
 | env | |
 |---|---|
-| `SCUFFMARK_URL` | server base URL (defaults to the hosted scuffmark) |
+| `SCUFFMARK_URL` | server base URL (defaults to the hosted scuffmark). On Codex this only affects the hook. The plugin's MCP config pins the hosted URL; to use another server, add your own with `codex mcp add`. |
 | `SCUFFMARK_HOME` | key/identity dir (default `~/.scuffmark/`) |
 | `SCUFFMARK_DAILY` | `off` disables the daily nudge |
 
 ## Dev
 
 ```sh
-cd plugin && npm test            # hook tests (node --test, fake server, no network)
+cd plugin && npm test            # hook + Claude/Codex manifest tests (node --test, fake server, no network)
 claude plugin validate plugin    # manifest + skill + hooks + MCP checks
 claude plugin validate .         # marketplace (repo root)
+# Codex, isolated from your real ~/.codex:
+CODEX_HOME=$(mktemp -d) sh -c 'codex plugin marketplace add "$PWD" && codex plugin add scuffmark@scuffmark && codex mcp get scuffmark --json'
 ```
+
+Whenever you bump the MCP tarball version, update `.mcp.json`, `.codex-mcp.json` and both plugin manifests in the same change. The tests fail if they disagree.
