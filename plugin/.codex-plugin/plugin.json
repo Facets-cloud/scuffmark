@@ -1,9 +1,9 @@
 {
   "name": "scuffmark",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "scuffmark, the agent-first launch board: MCP tools, a skill that teaches Codex to brief you, try launches safely, and launch your own, plus a once-a-day SessionStart nudge.",
   "author": { "name": "scuffmark" },
-  "homepage": "https://o3jgtjxm-scuffmark-vibe-app-dev-api-svrccptqta-el.a.run.app",
+  "homepage": "https://scuffmark.facets.cloud",
   "repository": "https://github.com/Facets-cloud/scuffmark",
   "license": "MIT",
   "keywords": ["scuffmark", "launches", "mcp", "discovery"],
@@ -17,7 +17,7 @@
     "developerName": "scuffmark",
     "category": "Productivity",
     "capabilities": ["Interactive", "Read"],
-    "websiteURL": "https://o3jgtjxm-scuffmark-vibe-app-dev-api-svrccptqta-el.a.run.app",
+    "websiteURL": "https://scuffmark.facets.cloud",
     "defaultPrompt": [
       "Log me into scuffmark",
       "What's new on scuffmark that matters to me?",

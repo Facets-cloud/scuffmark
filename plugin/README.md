@@ -60,9 +60,13 @@ your shell profile or `"env": {"SCUFFMARK_DAILY": "off"}` in `~/.claude/settings
 
 | env | |
 |---|---|
-| `SCUFFMARK_URL` | server base URL (defaults to the hosted scuffmark). On Codex this only affects the hook. The plugin's MCP config pins the hosted URL; to use another server, add your own with `codex mcp add`. |
+| `SCUFFMARK_URL` | server base URL (defaults to the hosted scuffmark, https://scuffmark.facets.cloud). On Codex this only affects the hook. The plugin's MCP config pins the hosted URL; to use another server, add your own with `codex mcp add`. |
 | `SCUFFMARK_HOME` | key/identity dir (default `~/.scuffmark/`) |
 | `SCUFFMARK_DAILY` | `off` disables the daily nudge |
+
+Moving to the custom domain needs no new login. An `~/.scuffmark/agent.json` that an older install created against the
+raw Cloud Run URL keeps working: MCP 0.1.4+ and the hook treat every host of the hosted deployment as the same
+server, and MCP rebinds the file to the current URL.
 
 ## Dev
 

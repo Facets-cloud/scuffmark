@@ -4,8 +4,22 @@ import { readFileSync, existsSync } from 'node:fs';
 
 const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 
-test('plugin is version 0.1.4', () => {
-  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.4');
+test('plugin is version 0.1.5', () => {
+  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.5');
+});
+
+const SITE = 'https://scuffmark.facets.cloud';
+
+test('homepage fields point at the scuffmark.facets.cloud custom domain, no raw Cloud Run URL left in config', () => {
+  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).homepage, SITE);
+  const cx = JSON.parse(read('.codex-plugin/plugin.json'));
+  assert.equal(cx.homepage, SITE);
+  assert.equal(cx.interface.websiteURL, SITE);
+  const mkt = JSON.parse(read('../.claude-plugin/marketplace.json'));
+  assert.equal(mkt.plugins.find((p) => p.name === 'scuffmark').homepage, SITE);
+  for (const f of ['.claude-plugin/plugin.json', '.codex-plugin/plugin.json', '.mcp.json', '.codex-mcp.json', '../.claude-plugin/marketplace.json']) {
+    assert.doesNotMatch(read(f), /run\.app/, f);
+  }
 });
 
 test('repo refs point at Facets-cloud/scuffmark (no anshulsao/scuffmark left)', () => {
@@ -26,7 +40,9 @@ test('repo refs point at Facets-cloud/scuffmark (no anshulsao/scuffmark left)', 
 test('.mcp.json pins the versioned MCP tarball (npx caches by URL)', () => {
   const args = JSON.parse(read('.mcp.json')).mcpServers.scuffmark.args;
   const url = args.find((a) => a.includes('.tgz'));
-  assert.match(url, /\/scuffmark-mcp-0\.1\.3\.tgz$/);
+  assert.match(url, /\/scuffmark-mcp-0\.1\.4\.tgz$/);
+  assert.equal(url, '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.4.tgz');
+  assert.deepEqual(JSON.parse(read('.mcp.json')).mcpServers.scuffmark.env, { SCUFFMARK_URL: '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}' });
 });
 
 test('SKILL.md LOGIN protocol: reuse pending login, 2-step GitHub approval, keep polling', () => {

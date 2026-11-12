@@ -23,4 +23,4 @@ codex plugin add scuffmark@scuffmark
 
 Start Codex and say **"log me into scuffmark"**. To get the once-a-day nudge, run `/hooks` once and trust the scuffmark SessionStart hook. Codex never runs plugin hooks until you trust them.
 
-Details: [plugin/README.md](plugin/README.md). License: MIT.
+Site: https://scuffmark.facets.cloud. Details: [plugin/README.md](plugin/README.md). License: MIT.

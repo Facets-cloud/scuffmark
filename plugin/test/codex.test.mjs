@@ -7,7 +7,7 @@ import { readFileSync, existsSync } from 'node:fs';
 
 const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 const json = (p) => JSON.parse(read(p));
-const LIVE = 'https://o3jgtjxm-scuffmark-vibe-app-dev-api-svrccptqta-el.a.run.app';
+const LIVE = 'https://scuffmark.facets.cloud';
 const codex = () => json('.codex-plugin/plugin.json');
 
 test('codex manifest mirrors the Claude manifest identity and version', () => {
@@ -32,7 +32,7 @@ test('codex MCP file has no ${...} (Codex does not interpolate) and pins the ver
   assert.doesNotMatch(raw, /\$\{/);
   const s = JSON.parse(raw).mcpServers.scuffmark;
   assert.equal(s.command, 'npx');
-  assert.deepEqual(s.args, ['-y', `${LIVE}/scuffmark-mcp-0.1.3.tgz`]);
+  assert.deepEqual(s.args, ['-y', `${LIVE}/scuffmark-mcp-0.1.4.tgz`]);
   assert.deepEqual(s.env, { SCUFFMARK_URL: LIVE });
 });
 

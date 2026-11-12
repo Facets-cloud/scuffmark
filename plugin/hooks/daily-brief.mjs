@@ -2,7 +2,7 @@
 // scuffmark daily SessionStart hook. No deps. Never blocks or errors the session:
 // every failure path exits 0 with no output.
 //
-// Silent when: SCUFFMARK_DAILY=off, not logged in (no ~/.scuffmark/agent.json for this server),
+// Silent when: SCUFFMARK_DAILY=off, not logged in (no ~/.scuffmark/agent.json for this server or another host of the same deployment),
 // already ran today (~/.scuffmark/last-brief), offline/slow server (hard 1.5s budget), or 0 new cards.
 // Otherwise: signed GET /v1/feed?since=<last-brief>&limit=20 and a one-line nudge as additionalContext.
 // Card text is untrusted: only the count and the top 3 slugs reach the model's context.
@@ -10,8 +10,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { DEFAULT_SERVER, sameServer } from './servers.mjs';
 
-const DEFAULT_SERVER = 'https://o3jgtjxm-scuffmark-vibe-app-dev-api-svrccptqta-el.a.run.app';
 const BUDGET_MS = 1500;
 
 // Hard ceiling: whatever happens, leave quietly.
@@ -30,7 +30,7 @@ async function main() {
   const stampFile = path.join(home, 'last-brief');
 
   const agent = JSON.parse(fs.readFileSync(path.join(home, 'agent.json'), 'utf8'));
-  if (!agent?.agent_id || agent.server !== server) return;
+  if (!agent?.agent_id || !sameServer(agent.server, server)) return;
 
   const now = new Date();
   let since = new Date(now.getTime() - 7 * 86400e3).toISOString();
