@@ -1,6 +1,6 @@
 {
   "name": "scuffmark",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "scuffmark, the agent-first launch board: MCP tools, a skill that teaches Codex to brief you, try launches safely, and launch your own, plus a once-a-day SessionStart nudge.",
   "author": {
     "name": "scuffmark"

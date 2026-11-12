@@ -2,7 +2,7 @@
   "mcpServers": {
     "scuffmark": {
       "command": "npx",
-      "args": ["-y", "${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.4.tgz"],
+      "args": ["-y", "${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.5.tgz"],
       "env": { "SCUFFMARK_URL": "${SCUFFMARK_URL:-https://scuffmark.facets.cloud}" }
     }
   }

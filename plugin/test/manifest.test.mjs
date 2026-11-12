@@ -4,8 +4,8 @@ import { readFileSync, existsSync } from 'node:fs';
 
 const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 
-test('plugin is version 0.1.6', () => {
-  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.6');
+test('plugin is version 0.1.7', () => {
+  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.7');
 });
 
 const SITE = 'https://scuffmark.facets.cloud';
@@ -40,8 +40,8 @@ test('repo refs point at Facets-cloud/scuffmark (no anshulsao/scuffmark left)', 
 test('.mcp.json pins the versioned MCP tarball (npx caches by URL)', () => {
   const args = JSON.parse(read('.mcp.json')).mcpServers.scuffmark.args;
   const url = args.find((a) => a.includes('.tgz'));
-  assert.match(url, /\/scuffmark-mcp-0\.1\.4\.tgz$/);
-  assert.equal(url, '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.4.tgz');
+  assert.match(url, /\/scuffmark-mcp-0\.1\.5\.tgz$/);
+  assert.equal(url, '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.5.tgz');
   assert.deepEqual(JSON.parse(read('.mcp.json')).mcpServers.scuffmark.env, { SCUFFMARK_URL: '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}' });
 });
 
@@ -92,12 +92,51 @@ test('SKILL.md lists claim + edit_card in Other tools and triggers on hunt/claim
 
 test('codex manifest ships the thumbprint icon + logo that exist on disk', () => {
   const m = JSON.parse(read('.codex-plugin/plugin.json'));
-  assert.equal(m.version, '0.1.6');
+  assert.equal(m.version, '0.1.7');
   assert.equal(m.interface.composerIcon, './assets/icon.svg');
   assert.equal(m.interface.logo, './assets/logo.svg');
   for (const f of ['assets/icon.svg', 'assets/logo.svg']) {
     const svg = read(f);
     assert.match(svg, /^<svg/);
     assert.doesNotMatch(svg, /<script/i);
+  }
+});
+
+// ---- seed hygiene (plugin 0.1.7 / mcp 0.1.5) ----
+test('SKILL.md BRIEF: show the auto-listed label, do not treat unverified-listing signals as a verdict', () => {
+  const s = read('skills/scuffmark/SKILL.md');
+  const brief = section(s, '## BRIEF', '## TRY');
+  assert.match(brief, /listing_label/);
+  assert.match(brief, /Auto-listed from Show HN \/ GitHub; not submitted by the maker/);
+  assert.match(brief, /unverified-listing/);
+});
+
+test('SKILL.md TRY: never run try_guess / unverified try without README check + human OK', () => {
+  const s = read('skills/scuffmark/SKILL.md');
+  const t = section(s, '## TRY', '## LAUNCH');
+  assert.match(t, /try_verified/);
+  assert.match(t, /try_guess/);
+  assert.match(t, /README/);
+  assert.match(t, /never run `try_guess`/i);
+  assert.match(t, /explicit OK|explicitly approve/i);
+});
+
+test('SKILL.md REMOVE: maker opt-out via takedown, ownership proof, confirm first, /remove fallback', () => {
+  const s = read('skills/scuffmark/SKILL.md');
+  const r = section(s, '## REMOVE', '## LOGIN');
+  assert.match(r, /remove my project from scuffmark/);
+  assert.match(r, /`takedown \{slug\}`/);
+  assert.match(r, /permanent/i);
+  for (const e of ['not_maker', 'no_repo']) assert.match(r, new RegExp(e));
+  assert.match(r, /remove_url|\/remove/);
+  const desc = s.split('\n').find((l) => l.startsWith('description:'));
+  assert.match(desc, /remove my project/);
+  assert.match(section(s, '## Other tools', '## Daily nudge'), /`takedown`/);
+});
+
+test('no implied affiliation in skill or README', () => {
+  for (const f of ['skills/scuffmark/SKILL.md', 'README.md']) {
+    const t = read(f);
+    for (const re of [/\bpartner/i, /\bofficial/i, /featured (by|on)/i, /\bendorsed/i]) assert.doesNotMatch(t, re, f);
   }
 });
