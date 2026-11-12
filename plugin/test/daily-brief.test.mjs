@@ -208,3 +208,32 @@ test('corrupt key/agent files -> silent, exit 0', async () => {
   assert.equal(r.code, 0);
   assert.equal(r.out, '');
 });
+
+// ---- agent.json is shared with every MCP install (old ones compare `server` strictly): the hook only ever reads it ----
+test('hook never writes agent.json (logged-in run leaves it byte-identical)', async () => {
+  const { srv, url } = await fakeServer((req, res) => {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ cards: CARDS }));
+  });
+  try {
+    const home = tmpHome();
+    loginHome(home, url);
+    const file = path.join(home, 'agent.json');
+    const before = fs.readFileSync(file, 'utf8');
+    const mtime = fs.statSync(file).mtimeMs;
+    const r = await run({ SCUFFMARK_HOME: home, SCUFFMARK_URL: url });
+    assert.equal(r.code, 0);
+    assert.ok(r.out.length > 0, 'hook ran the logged-in path');
+    assert.equal(fs.readFileSync(file, 'utf8'), before);
+    assert.equal(fs.statSync(file).mtimeMs, mtime);
+  } finally { srv.close(); }
+});
+
+test('hook source has no write to agent.json', () => {
+  for (const f of fs.readdirSync(path.dirname(SCRIPT)).filter((n) => n.endsWith('.mjs'))) {
+    const src = fs.readFileSync(path.join(path.dirname(SCRIPT), f), 'utf8');
+    for (const line of src.split('\n')) {
+      if (/agent\.json/.test(line)) assert.doesNotMatch(line, /write|rename|copyFile|appendFile|rm\(|unlink/, `${f}: ${line}`);
+    }
+  }
+});

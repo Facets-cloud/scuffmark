@@ -4,8 +4,8 @@ import { readFileSync, existsSync } from 'node:fs';
 
 const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 
-test('plugin is version 0.1.7', () => {
-  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.7');
+test('plugin is version 0.1.8', () => {
+  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.8');
 });
 
 const SITE = 'https://scuffmark.facets.cloud';
@@ -40,8 +40,8 @@ test('repo refs point at Facets-cloud/scuffmark (no anshulsao/scuffmark left)', 
 test('.mcp.json pins the versioned MCP tarball (npx caches by URL)', () => {
   const args = JSON.parse(read('.mcp.json')).mcpServers.scuffmark.args;
   const url = args.find((a) => a.includes('.tgz'));
-  assert.match(url, /\/scuffmark-mcp-0\.1\.5\.tgz$/);
-  assert.equal(url, '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.5.tgz');
+  assert.match(url, /\/scuffmark-mcp-0\.1\.6\.tgz$/);
+  assert.equal(url, '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.6.tgz');
   assert.deepEqual(JSON.parse(read('.mcp.json')).mcpServers.scuffmark.env, { SCUFFMARK_URL: '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}' });
 });
 
@@ -92,7 +92,7 @@ test('SKILL.md lists claim + edit_card in Other tools and triggers on hunt/claim
 
 test('codex manifest ships the thumbprint icon + logo that exist on disk', () => {
   const m = JSON.parse(read('.codex-plugin/plugin.json'));
-  assert.equal(m.version, '0.1.7');
+  assert.equal(m.version, '0.1.8');
   assert.equal(m.interface.composerIcon, './assets/icon.svg');
   assert.equal(m.interface.logo, './assets/logo.svg');
   for (const f of ['assets/icon.svg', 'assets/logo.svg']) {

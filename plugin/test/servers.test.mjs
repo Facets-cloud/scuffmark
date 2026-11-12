@@ -26,3 +26,8 @@ test('normalizePathQuery is invariant under the front door rewrite (same as serv
   assert.equal(normalizePathQuery(sent), normalizePathQuery(received));
   assert.equal(normalizePathQuery('/v1/feed?since=x%3Ay&limit=20'), '/v1/feed?limit=20&since=x%3Ay');
 });
+
+test('an agent.json written by mcp >= 0.1.6 (server = raw Cloud Run URL, servers[]) matches the custom domain', async () => {
+  const { sameServer, DEFAULT_SERVER } = await import('../hooks/servers.mjs');
+  assert.ok(sameServer('https://o3jgtjxm-scuffmark-vibe-app-dev-api-svrccptqta-el.a.run.app', DEFAULT_SERVER));
+});
