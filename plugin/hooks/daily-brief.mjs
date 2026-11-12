@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { DEFAULT_SERVER, sameServer } from './servers.mjs';
+import { DEFAULT_SERVER, sameServer, normalizePathQuery } from './servers.mjs';
 
 const BUDGET_MS = 1500;
 
@@ -43,7 +43,8 @@ async function main() {
   }
 
   const key = crypto.createPrivateKey(fs.readFileSync(path.join(home, 'key.pem')));
-  const pathWithQuery = `/v1/feed?since=${encodeURIComponent(since)}&limit=20`;
+  // Normalized (sorted params) so the signature survives the front door's request-line rewrite.
+  const pathWithQuery = normalizePathQuery(`/v1/feed?since=${encodeURIComponent(since)}&limit=20`);
   const ts = String(Math.floor(Date.now() / 1000));
   const canonical = `GET\n${pathWithQuery}\n${ts}\n${crypto.createHash('sha256').update('').digest('hex')}`;
   const sig = crypto.sign(null, Buffer.from(canonical), key).toString('base64');

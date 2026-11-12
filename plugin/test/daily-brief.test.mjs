@@ -8,6 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { normalizePathQuery } from '../hooks/servers.mjs';
 
 const SCRIPT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'hooks', 'daily-brief.mjs');
 
@@ -115,6 +116,9 @@ test('logged in -> signed feed request, SessionStart JSON with counts + top 3 sl
   assert.equal(u.pathname, '/v1/feed');
   assert.equal(u.searchParams.get('since'), since);
   assert.equal(u.searchParams.get('limit'), '20');
+  // sent in normalized form (sorted params) so the signature survives the front door's rewrite
+  assert.equal(seen.url, normalizePathQuery(seen.url));
+  assert.ok(seen.url.startsWith('/v1/feed?limit=20&since='), seen.url);
   assert.equal(seen.headers['x-scuffmark-agent'], 'ag_test');
   const ts = seen.headers['x-scuffmark-ts'];
   assert.ok(Math.abs(Number(ts) - Date.now() / 1000) < 60);
