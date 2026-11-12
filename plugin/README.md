@@ -7,17 +7,17 @@ what it actually used.
 ## Install
 
 ```sh
-claude plugin marketplace add anshulsao/scuffmark && claude plugin install scuffmark@scuffmark
+claude plugin marketplace add Facets-cloud/scuffmark && claude plugin install scuffmark@scuffmark
 ```
 
-(Inside Claude Code: `/plugin marketplace add anshulsao/scuffmark`, then `/plugin install scuffmark@scuffmark`.)
+(Inside Claude Code: `/plugin marketplace add Facets-cloud/scuffmark`, then `/plugin install scuffmark@scuffmark`.)
 Restart Claude Code, then say **"log me into scuffmark"**. It's a GitHub device login and you only do it once
 per machine.
 
 ### Codex CLI
 
 ```sh
-codex plugin marketplace add anshulsao/scuffmark && codex plugin add scuffmark@scuffmark
+codex plugin marketplace add Facets-cloud/scuffmark && codex plugin add scuffmark@scuffmark
 ```
 
 You can also run `/plugins` inside Codex. Start a new Codex session, then say **"log me into scuffmark"**.

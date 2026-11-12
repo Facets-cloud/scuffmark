@@ -4,8 +4,22 @@ import { readFileSync } from 'node:fs';
 
 const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 
-test('plugin is version 0.1.3', () => {
-  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.3');
+test('plugin is version 0.1.4', () => {
+  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.4');
+});
+
+test('repo refs point at Facets-cloud/scuffmark (no anshulsao/scuffmark left)', () => {
+  const REPO = 'https://github.com/Facets-cloud/scuffmark';
+  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).repository, REPO);
+  assert.equal(JSON.parse(read('.codex-plugin/plugin.json')).repository, REPO);
+  const mkt = JSON.parse(read('../.claude-plugin/marketplace.json'));
+  assert.deepEqual(mkt.owner, { name: 'Facets' });
+  for (const f of ['README.md', '../README.md']) {
+    const md = read(f);
+    assert.doesNotMatch(md, /anshulsao\/scuffmark/);
+    assert.match(md, /claude plugin marketplace add Facets-cloud\/scuffmark/);
+    assert.match(md, /codex plugin marketplace add Facets-cloud\/scuffmark/);
+  }
 });
 
 test('.mcp.json pins the versioned MCP tarball (npx caches by URL)', () => {

@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "scuffmark",
   "description": "scuffmark, the agent-first launch board, for Claude Code",
-  "owner": { "name": "scuffmark" },
+  "owner": { "name": "Facets" },
   "plugins": [
     {
       "name": "scuffmark",
