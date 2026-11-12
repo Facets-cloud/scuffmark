@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 
 const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 
@@ -14,7 +14,8 @@ test('repo refs point at Facets-cloud/scuffmark (no anshulsao/scuffmark left)', 
   assert.equal(JSON.parse(read('.codex-plugin/plugin.json')).repository, REPO);
   const mkt = JSON.parse(read('../.claude-plugin/marketplace.json'));
   assert.deepEqual(mkt.owner, { name: 'Facets' });
-  for (const f of ['README.md', '../README.md']) {
+  // root README only exists in the public plugin repo, not the server-side mirror
+  for (const f of ['README.md', '../README.md'].filter((f) => existsSync(new URL('../' + f, import.meta.url)))) {
     const md = read(f);
     assert.doesNotMatch(md, /anshulsao\/scuffmark/);
     assert.match(md, /claude plugin marketplace add Facets-cloud\/scuffmark/);
