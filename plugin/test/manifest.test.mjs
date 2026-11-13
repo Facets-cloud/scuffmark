@@ -4,8 +4,8 @@ import { readFileSync, existsSync } from 'node:fs';
 
 const read = (p) => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 
-test('plugin is version 0.1.11', () => {
-  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.11');
+test('plugin is version 0.1.12', () => {
+  assert.equal(JSON.parse(read('.claude-plugin/plugin.json')).version, '0.1.12');
 });
 
 const SITE = 'https://scuffmark.facets.cloud';
@@ -40,8 +40,8 @@ test('repo refs point at Facets-cloud/scuffmark (no anshulsao/scuffmark left)', 
 test('.mcp.json pins the versioned MCP tarball (npx caches by URL)', () => {
   const args = JSON.parse(read('.mcp.json')).mcpServers.scuffmark.args;
   const url = args.find((a) => a.includes('.tgz'));
-  assert.match(url, /\/scuffmark-mcp-0\.1\.9\.tgz$/);
-  assert.equal(url, '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.9.tgz');
+  assert.match(url, /\/scuffmark-mcp-0\.1\.10\.tgz$/);
+  assert.equal(url, '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}/scuffmark-mcp-0.1.10.tgz');
   assert.deepEqual(JSON.parse(read('.mcp.json')).mcpServers.scuffmark.env, { SCUFFMARK_URL: '${SCUFFMARK_URL:-https://scuffmark.facets.cloud}' });
 });
 
@@ -93,7 +93,7 @@ test('SKILL.md lists claim + edit_card in Other tools and triggers on hunt/claim
 
 test('codex manifest ships the thumbprint icon + logo that exist on disk', () => {
   const m = JSON.parse(read('.codex-plugin/plugin.json'));
-  assert.equal(m.version, '0.1.11');
+  assert.equal(m.version, '0.1.12');
   assert.equal(m.interface.composerIcon, './assets/icon.svg');
   assert.equal(m.interface.logo, './assets/logo.svg');
   for (const f of ['assets/icon.svg', 'assets/logo.svg']) {
@@ -186,4 +186,28 @@ test('SKILL.md Other tools: admin_stats is operator-only', () => {
 test('SKILL.md Daily nudge: headless sessions never spend the daily slot', () => {
   const d = read('skills/scuffmark/SKILL.md').split('## Daily nudge')[1];
   assert.match(d, /headless|non-interactive/i);
+});
+
+// ---- update nudge (plugin 0.1.12 / mcp 0.1.10) ----
+test('READMEs and SKILL: after install, enable auto-update (Claude) and the Codex upgrade command; copy rules', () => {
+  for (const f of ['README.md', '../README.md'].filter((f) => existsSync(new URL('../' + f, import.meta.url)))) {
+    const md = read(f);
+    assert.match(md, /\/plugin -> Marketplaces -> scuffmark -> Enable auto-update/, f);
+    assert.match(md, /codex plugin marketplace upgrade/, f);
+    assert.doesNotMatch(md, /cursor/i, f);
+  }
+});
+
+test('SKILL.md UPDATE: relay update_available / notice, offer the update, run it only after a yes', () => {
+  const s = read('skills/scuffmark/SKILL.md');
+  const u = section(s, '## UPDATE', '## Other tools');
+  assert.match(u, /update_available/);
+  assert.match(u, /notice/);
+  assert.match(u, /only after (they|the human) say(s)? yes/i);
+  assert.match(u, /claude plugin marketplace update scuffmark && claude plugin update scuffmark@scuffmark/);
+  assert.match(u, /\/reload-plugins/);
+  assert.match(u, /Enable auto-update/);
+  assert.match(u, /codex plugin marketplace upgrade/);
+  assert.match(u, /once/i);
+  assert.doesNotMatch(u, /fail/i);
 });

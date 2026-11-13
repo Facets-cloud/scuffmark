@@ -32,7 +32,7 @@ test('codex MCP file has no ${...} (Codex does not interpolate) and pins the ver
   assert.doesNotMatch(raw, /\$\{/);
   const s = JSON.parse(raw).mcpServers.scuffmark;
   assert.equal(s.command, 'npx');
-  assert.deepEqual(s.args, ['-y', `${LIVE}/scuffmark-mcp-0.1.9.tgz`]);
+  assert.deepEqual(s.args, ['-y', `${LIVE}/scuffmark-mcp-0.1.10.tgz`]);
   assert.deepEqual(s.env, { SCUFFMARK_URL: LIVE });
 });
 

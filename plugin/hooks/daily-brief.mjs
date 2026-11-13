@@ -15,6 +15,23 @@ import { DEFAULT_SERVER, sameServer, normalizePathQuery } from './servers.mjs';
 
 const BUDGET_MS = 1500;
 
+// This plugin's own version (the manifest next to hooks/), for the update line.
+const OWN_VERSION = (() => {
+  try { return JSON.parse(fs.readFileSync(new URL('../.claude-plugin/plugin.json', import.meta.url), 'utf8')).version || null; } catch { return null; }
+})();
+const VER = /^\d+\.\d+\.\d+$/;
+
+// "plugin=0.1.12; mcp=0.1.10" from the server -> the plugin version, only if strictly newer than ours.
+export function newerPlugin(header, own = OWN_VERSION) {
+  if (typeof header !== 'string' || !VER.test(own || '')) return null;
+  const m = /(?:^|;)\s*plugin=([^;\s]+)/.exec(header);
+  const v = m && VER.test(m[1]) ? m[1] : null;
+  if (!v) return null;
+  const a = v.split('.').map(Number); const b = own.split('.').map(Number);
+  for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] > b[i] ? v : null;
+  return null;
+}
+
 // Hard ceiling: whatever happens, leave quietly.
 setTimeout(() => process.exit(0), BUDGET_MS + 300).unref();
 
@@ -87,6 +104,7 @@ async function main() {
     signal: AbortSignal.timeout(BUDGET_MS),
   });
   if (!res.ok) return;
+  const latestPlugin = newerPlugin(res.headers.get('x-scuffmark-latest'));
   const body = await res.json();
   // Stamp only after a real feed answer; anything else retries next session.
   if (!Array.isArray(body?.cards)) return;
@@ -94,18 +112,24 @@ async function main() {
 
   fs.mkdirSync(home, { recursive: true, mode: 0o700 });
   fs.writeFileSync(stampFile, now.toISOString());
-  if (cards.length === 0) return;
-
-  const slugs = cards
-    .slice(0, 3)
-    .map((c) => String(c?.slug ?? ''))
-    .filter((s) => /^[a-z0-9][a-z0-9-]{0,99}$/.test(s));
-  const n = cards.length;
-  const ctx =
-    `scuffmark: ${n} new launch${n === 1 ? '' : 'es'} since ${since.slice(0, 10)}` +
-    (slugs.length ? ` (top: ${slugs.join(', ')})` : '') +
-    '. At a natural pause, offer the user a <=5-bullet brief filtered to their work (scuffmark skill BRIEF protocol). ' +
-    'Do not interrupt the current task for this.';
+  const lines = [];
+  if (cards.length > 0) {
+    const slugs = cards
+      .slice(0, 3)
+      .map((c) => String(c?.slug ?? ''))
+      .filter((s) => /^[a-z0-9][a-z0-9-]{0,99}$/.test(s));
+    const n = cards.length;
+    lines.push(
+      `scuffmark: ${n} new launch${n === 1 ? '' : 'es'} since ${since.slice(0, 10)}` +
+      (slugs.length ? ` (top: ${slugs.join(', ')})` : '') +
+      '. At a natural pause, offer the user a <=5-bullet brief filtered to their work (scuffmark skill BRIEF protocol). ' +
+      'Do not interrupt the current task for this.',
+    );
+  }
+  // Versions are validated digits only; the how-to lives in the skill's UPDATE section.
+  if (latestPlugin) lines.push(`scuffmark plugin ${latestPlugin} available (you have ${OWN_VERSION}); offer to update (scuffmark skill UPDATE protocol), only after the user says yes.`);
+  if (!lines.length) return;
+  const ctx = lines.join('\n');
   const out = JSON.stringify({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: ctx } });
   await new Promise((resolve) => process.stdout.write(out, resolve));
 }

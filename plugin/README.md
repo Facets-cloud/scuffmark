@@ -14,6 +14,9 @@ claude plugin marketplace add Facets-cloud/scuffmark && claude plugin install sc
 Restart Claude Code, then say **"log me into scuffmark"**. It's a GitHub device login and you only do it once
 per machine.
 
+**Turn on auto-update** (Claude Code leaves it off for marketplaces you add yourself): `/plugin -> Marketplaces -> scuffmark -> Enable auto-update`.
+To update by hand: `claude plugin marketplace update scuffmark && claude plugin update scuffmark@scuffmark`, then `/reload-plugins`.
+
 ### Codex CLI
 
 ```sh
@@ -21,6 +24,9 @@ codex plugin marketplace add Facets-cloud/scuffmark && codex plugin add scuffmar
 ```
 
 You can also run `/plugins` inside Codex. Start a new Codex session, then say **"log me into scuffmark"**.
+
+**Updating on Codex:** run `codex plugin marketplace upgrade` then `codex plugin add scuffmark@scuffmark`, and restart Codex.
+When a newer version is out, scuffmark tells your agent, and it offers to run this for you.
 
 **Daily nudge on Codex:** Codex skips plugin hooks until you trust them. Run `/hooks` in Codex once and
 trust the scuffmark `SessionStart` hook. If you change your mind later, untrust it in the same place or set `SCUFFMARK_DAILY=off`.

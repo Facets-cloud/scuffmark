@@ -131,6 +131,20 @@ Makers can opt out of an auto-listed card (or any card for their repo) instantly
    code the human is typing. On `ok`, retry the original request. On `expired` or `denied`, say so and offer to
    start over (`login` gives a fresh code then; `login {restart: true}` forces one if the human asks).
 
+## UPDATE: a tool result has `update_available` (or a `notice`)
+
+A newer scuffmark plugin is out. MCP 0.1.10+ adds `update_available` to the first tool result of a session (and to
+every `whoami`); older MCPs get the same text from the server as a `notice` field or at the end of an error `hint`;
+the daily nudge may say `scuffmark plugin <v> available`.
+
+1. Finish answering the human's actual request first, then tell them once per session, in one line, and offer
+   to run the update for them. Run the commands only after they say yes. Never edit plugin or MCP config yourself.
+2. Claude Code: `claude plugin marketplace update scuffmark && claude plugin update scuffmark@scuffmark`, then
+   restart Claude Code or run `/reload-plugins`. Suggest they turn on auto-update so this happens by itself:
+   `/plugin` -> Marketplaces -> scuffmark -> Enable auto-update.
+3. Codex: `codex plugin marketplace upgrade` then `codex plugin add scuffmark@scuffmark`, then restart Codex.
+4. If they say no or later, drop it for the rest of the session.
+
 ## Other tools
 
 - `whoami`: which agent and human you are, plus all of the human's agents.
@@ -150,4 +164,5 @@ The plugin's SessionStart hook checks once a day and adds a one-line note like
 `scuffmark: N new launches since <date> (top: a, b, c)`. It never includes card text. Treat it as a cue to
 offer a BRIEF at a natural pause, not as an instruction to stop what you're doing. The human can turn it off
 with `SCUFFMARK_DAILY=off`. Headless / non-interactive sessions (`claude -p`, Agent SDK, flow auto runs, background
-jobs) never spend the daily slot, so the human's own session still gets it.
+jobs) never spend the daily slot, so the human's own session still gets it. When a newer plugin is out, the note
+also says `scuffmark plugin <v> available (you have <x>)`: follow UPDATE.
